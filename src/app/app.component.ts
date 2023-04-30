@@ -8,14 +8,20 @@ import { Component } from '@angular/core';
 export class AppComponent {
   name = 'Angular';
 
-  celsius = 0;
+  weather: Weather = {
+    celsius: 0,
+    location: '',
+    description: '',
+    main: ''
+  };
 
-  location = '';
-  description = '';
-  main = '';
+  gps: GPS = {
+    lat: 39.977763,
+    long: -105.131930
+  };
 
   get fahrenheit() {
-    return this.celsius * 1.8 + 32;
+    return this.weather.celsius * 1.8 + 32;
   }
 
   get temp() {
@@ -23,9 +29,9 @@ export class AppComponent {
   }
 
   get top() {
-    if (this.celsius < 20) {
+    if (this.weather.celsius < 20) {
       return 'jacket';
-    } else if (this.celsius < 30) {
+    } else if (this.weather.celsius < 30) {
       return 'hoodie';
     } else {
       return 't-shirt';
@@ -33,21 +39,34 @@ export class AppComponent {
   }
 
   ngOnInit() {
+    this.setup();
+  }
+
+  async setup() {
+    try {
+      this.gps = await getLocation();
+    } catch (e) {
+      this.gps = {
+        lat: 39.977763,
+        long: -105.131930
+      }
+    }
+
     this.refresh();
 
     setInterval(() => {
       this.refresh();
-    }, 60 * 1000 * 5)
+    }, 60 * 1000 * 5);
   }
 
   async refresh() {
-    const w = await getWeather();
-
-    this.celsius = w.celsius;
-    this.location = w.location;
-    this.description = w.description;
-    this.main = w.main;
+    this.weather = await getWeather(this.gps);
   }
+}
+
+interface GPS {
+  lat: number;
+  long: number;
 }
 
 interface Weather {
@@ -57,27 +76,42 @@ interface Weather {
   main: string;
 }
 
-function getWeather(): Promise<Weather> {
-  return new Promise((resolve, reject) => {
+async function getLocation(): Promise<GPS> {
+  return new Promise((resolve) => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const long = position.coords.longitude;
+      let lat = 0;
+      let long = 0;
 
-        const api = `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${long}`;
-
-        const response = await fetch(api);
-        const jsonData = await response.json();
+      navigator.geolocation.getCurrentPosition(position => {
+        lat = position.coords.latitude;
+        long = position.coords.longitude;
 
         resolve({
-          celsius: jsonData.main.temp,
-          location: jsonData.name,
-          description: jsonData.weather[0].description,
-          main: jsonData.weather[0].main
+          lat,
+          long
         });
       });
     } else {
-      reject('Geolocation is not supported by this browser.');
+      resolve({
+        lat: 39.977763,
+        long: -105.131930
+      });
     }
   });
+}
+
+async function getWeather(gps: GPS): Promise<Weather> {
+  const { lat, long } = gps;
+
+  const api = `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${long}`;
+
+  const response = await fetch(api);
+  const jsonData = await response.json();
+
+  return {
+    celsius: jsonData.main.temp,
+    location: jsonData.name,
+    description: jsonData.weather[0].description,
+    main: jsonData.weather[0].main
+  };
 }
