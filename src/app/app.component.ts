@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ReplaySubject } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -16,8 +17,8 @@ export class AppComponent {
   };
 
   gps: GPS = {
-    lat: 39.977763,
-    long: -105.131930
+    lat: 0,
+    long: 0
   };
 
   get fahrenheit() {
@@ -29,9 +30,9 @@ export class AppComponent {
   }
 
   get top() {
-    if (this.weather.celsius < 20) {
+    if (this.weather.celsius < 7) {
       return 'jacket';
-    } else if (this.weather.celsius < 30) {
+    } else if (this.weather.celsius < 18) {
       return 'hoodie';
     } else {
       return 't-shirt';
@@ -43,15 +44,7 @@ export class AppComponent {
   }
 
   async setup() {
-    try {
-      this.gps = await getLocation();
-    } catch (e) {
-      this.gps = {
-        lat: 39.977763,
-        long: -105.131930
-      }
-    }
-
+    this.gps = await getLocation();
     this.refresh();
 
     setInterval(() => {
@@ -77,7 +70,20 @@ interface Weather {
 }
 
 async function getLocation(): Promise<GPS> {
-  return new Promise((resolve) => {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+
+  if (urlParams.has('lat') && urlParams.has('lon')) {
+    const lat = urlParams.get('lat')!;
+    const long = urlParams.get('lon')!;
+  
+    return {
+      lat: parseFloat(lat),
+      long: parseFloat(long)
+    }
+  }
+
+  return new Promise((resolve, reject) => {
     if (navigator.geolocation) {
       let lat = 0;
       let long = 0;
@@ -86,16 +92,15 @@ async function getLocation(): Promise<GPS> {
         lat = position.coords.latitude;
         long = position.coords.longitude;
 
+        window.location.search = `?lat=${lat}&lon=${long}`;
+
         resolve({
           lat,
           long
         });
       });
     } else {
-      resolve({
-        lat: 39.977763,
-        long: -105.131930
-      });
+      reject('Geolocation is not supported by this browser.');
     }
   });
 }
