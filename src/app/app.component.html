@@ -1,9 +1,17 @@
 <div class="container">
-  <div>
-    <h1>{{ weather.location }}</h1>
-    <h2>{{ temp }} {{ weather.description }}</h2>
-  </div>
-  <div>
-    <img src='assets/{{top}}.png'  />
-  </div>
+  <ng-container *ngIf="weather && location && top">
+    <div *ngIf="location">
+      <h1>{{ location }}</h1>
+      <h2>{{ temp }} {{ description }}</h2>
+    </div>
+    <div *ngIf="top">
+      <img src='assets/{{top}}.png'  />
+    </div>
+  </ng-container>
 </div>
+
+<ng-template #loading>
+  <div class="loading">
+    <h1>Loading...</h1>
+  </div>
+</ng-template>
