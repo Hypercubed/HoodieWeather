@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { GPS, GpsLocationService } from './gps.service';
-import { Weather, WeatherService } from './weather.service';
+import { Forecast, WeatherService } from './weather.service';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +16,8 @@ export class AppComponent {
   temp?: string;
   top: string = '';
 
+  gps?: GPS;
+
   private forecastUrl?: string;
 
   ngOnInit() {
@@ -23,12 +25,15 @@ export class AppComponent {
   }
 
   async setup() {
-    const gps = await this.getPosition();
+    this.gps = await this.getPosition();
+    this.location = this.gps.location;
 
-    const meta = await this.weatherService.getWeatherGovMeta(gps);
-    const { relativeLocation, forecastHourly } = meta.properties;
+    const { properties } = await this.weatherService.getWeatherGovMeta(this.gps);
+    const { relativeLocation, forecastHourly } = properties;
 
-    this.location = relativeLocation.properties.city + ', ' + relativeLocation.properties.state;
+    if (relativeLocation) {
+      this.location = relativeLocation.properties.city + ', ' + relativeLocation.properties.state;
+    }
     this.forecastUrl = forecastHourly;
 
     this.refresh();
@@ -38,17 +43,18 @@ export class AppComponent {
     }, 60 * 1000 * 5);
   }
 
-  async refresh() {
+  private async refresh() {
     if (!this.forecastUrl) return;
 
-    const { shortForecast, temperature } = await this.weatherService.getForecast(this.forecastUrl!);
-    this.description = shortForecast;
+    const forecast = await this.weatherService.getForecast(this.forecastUrl!);
 
-    this.temp = temperature.toFixed() + ' ºF';
-    this.top = getImage(temperature || -273);
+    this.description = forecast.shortForecast;
+
+    this.temp = forecast.temperature.toFixed() + ' ºF';
+    this.top = getImage(forecast);
   }
 
-  async getPosition(): Promise<GPS> {
+  private async getPosition(): Promise<GPS> {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
   
@@ -76,14 +82,21 @@ export class AppComponent {
 
     return { lat: 0, long: 0 };
   }
+
+  openLocation() {
+    if (!this.gps) return;
+    window.location.search = `?lat=${this.gps.lat}&lon=${this.gps.long}`;
+  }
 }
 
-function getImage(temperature: number) {
-  if (!temperature) return '';
+function getImage(forecast: Forecast): string {
+  const { temperature, chanceOfRain } = forecast;
 
-  if (temperature < 51) {  // 51ºF
+  if (chanceOfRain > 30) {
+    return 'raincoat';
+  } else if (temperature < 51) {
     return 'jacket';
-  } else if (temperature < 65) {  // 65ºF
+  } else if (temperature < 65) {
     return 'hoodie';
   } else {
     return 't-shirt';

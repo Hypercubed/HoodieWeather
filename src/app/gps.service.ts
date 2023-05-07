@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 export interface GPS {
   lat: number;
   long: number;
+  location?: string;
 }
 
 @Injectable({
@@ -18,8 +19,6 @@ export class GpsLocationService {
         navigator.geolocation.getCurrentPosition(position => {
           lat = position.coords.latitude;
           long = position.coords.longitude;
-  
-          window.location.search = `?lat=${lat}&lon=${long}`;
   
           resolve({
             lat,
@@ -41,9 +40,11 @@ export class GpsLocationService {
     const lat = parseFloat(json.latitude);
     const long = parseFloat(json.longitude);
 
+
     return {
-      lat,
-      long
+      lat: parseFloat(json.latitude),
+      long: parseFloat(json.longitude),
+      location: `${json.city}, ${json.region_code}`
     };
   }
 }

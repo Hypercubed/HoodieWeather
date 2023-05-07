@@ -1,9 +1,9 @@
 <div class="container">
   <div *ngIf="temp; else loading">
-    <h1>{{ location }}</h1>
-    <h2>{{ temp }} {{ description }}</h2>
+    <h1 (click)="openLocation()" class="forecast__location">{{ location }}</h1>
+    <h2 class="forecast__description">{{ temp }} {{ description }}</h2>
   </div>
-  <div *ngIf="top; else loading">
+  <div *ngIf="top; else loading" class="forecast__image">
     <img src='assets/{{top}}.png'  />
   </div>
 </div>

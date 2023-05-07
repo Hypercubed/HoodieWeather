@@ -1,7 +1,15 @@
 .container {
   display: flex;
+  width: 400px;
 
   > * {
     padding: 0 10px;
   }
+
+  .forecast__image {
+    flex: 0 0 128px;
+  }
+
+  h1 { font-size: 1.5em; margin: 0.5em 0; }
+  h2 { font-size: 1.2em; margin: 0.5em 0; }
 }
