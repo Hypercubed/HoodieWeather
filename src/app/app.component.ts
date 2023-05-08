@@ -90,13 +90,13 @@ export class AppComponent {
 }
 
 function getImage(forecast: Forecast): string {
-  const { temperature, chanceOfRain } = forecast;
+  const { apparentTemperature, chanceOfRain } = forecast;
 
   if (chanceOfRain > 30) {
     return 'raincoat';
-  } else if (temperature < 51) {
+  } else if (apparentTemperature < 51) {
     return 'jacket';
-  } else if (temperature < 65) {
+  } else if (apparentTemperature < 65) {
     return 'hoodie';
   } else {
     return 't-shirt';

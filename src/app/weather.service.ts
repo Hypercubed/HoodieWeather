@@ -4,7 +4,7 @@ import type { GPS } from "./gps.service";
 export interface Forecast {
   temperature: number;
   shortForecast: string;
-  windChill: number;
+  apparentTemperature: number;
   chanceOfRain: number;
 }
 
@@ -43,12 +43,12 @@ export class WeatherService {
     const { temperature, shortForecast, windSpeed, probabilityOfPrecipitation } = jsonData.properties.periods[0];
 
     const wind = windSpeed ? +windSpeed.replace(' mph', '') : 0;
-    const windChill = calculateWindChill(temperature, wind);
+    const apparentTemperature = calculateWindChill(temperature, wind);
 
     return {
       temperature,
       shortForecast,
-      windChill,
+      apparentTemperature,
       chanceOfRain: probabilityOfPrecipitation ? probabilityOfPrecipitation.value : 0
     };
   }
